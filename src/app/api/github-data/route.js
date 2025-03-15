@@ -1,0 +1,20 @@
+    import { NextResponse } from "next/server";
+    import axios from "axios";
+
+    export async function GET(req) {
+    const { searchParams } = new URL(req.url);
+    const username = searchParams.get("username"); // Extract username from query params
+
+    if (!username) {
+        return NextResponse.json({ error: "Username is required" }, { status: 400 });
+    }
+
+    try {
+        const response = await axios.get(`https://api.github.com/users/${username}`);
+        console.log(response.data);
+        
+        return NextResponse.json(response.data, { status: 200 });
+    } catch (error) {
+        return NextResponse.json({ error: "User not found" }, { status: error.response?.status || 500 });
+    }
+    }

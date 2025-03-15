@@ -1,54 +1,98 @@
-import React from "react";
-import "@fortawesome/fontawesome-free/css/all.min.css";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import axios from "axios";
+import { useSearchParams } from "next/navigation";
 
 export default function TechStack() {
-  const techStacks = [
-    {
-      name: "Python",
-      category: "Machine Learning",
-      image:
-        "https://storage.googleapis.com/a1aa/image/yYBfY3tu0NGhz_s2kDNcX5xo6Muh1a1SmLB3PQBhlb4.jpg",
-      description:
-        "Python is my go-to language for building machine learning models, data preprocessing, and automation tasks.",
-      categoryColor: "purple",
-    },
-    {
-      name: "TensorFlow",
-      category: "Deep Learning",
-      image:
-        "https://storage.googleapis.com/a1aa/image/_n12P2X_xzbQuVdH0S1dCYVkPAE-Vna6uTPVA1WzLJo.jpg",
-      description:
-        "I use TensorFlow for training and deploying deep learning models for tasks like image recognition and NLP.",
-      categoryColor: "pink",
-    },
-    {
-      name: "MongoDB",
-      category: "Database",
-      image:
-        "https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg",
-      description:
-        "MongoDB is my preferred NoSQL database for building scalable and flexible applications.",
-      categoryColor: "green",
-    },
-    {
-      name: "OpenAI",
-      category: "AI/ML",
-      image:
-        "https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg",
-      description:
-        "I use OpenAI APIs for generative AI tasks like text generation, chatbots, and automation.",
-      categoryColor: "blue",
-    },
-    {
-      name: "React",
-      category: "Frontend Framework",
-      image:
-        "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg",
-      description:
-        "React is my go-to frontend library for building interactive and dynamic user interfaces.",
-      categoryColor: "cyan",
-    },
-  ];
+  const [userData, setUserData] = useState(null);
+  const [summary, setSummary] = useState("Loading summary...");
+  const [techStack, setTechStack] = useState([]);
+  const searchParams = useSearchParams();
+  const username = searchParams.get("username");
+
+  useEffect(() => {
+    if (!username) return;
+
+    console.log(`Fetching GitHub data for username: ${username}`);
+
+    const fetchGitHubData = async () => {
+      try {
+        // Fetch GitHub user details
+        const userResponse = await axios.get(`https://api.github.com/users/${username}`);
+        setUserData(userResponse.data);
+
+        // Fetch README Content
+        let readmeContent = null;
+        try {
+          const readmeResponse = await axios.get(
+            `https://api.github.com/repos/${username}/${username}/readme`
+          );
+
+          if (readmeResponse.data.content) {
+            readmeContent = atob(readmeResponse.data.content);
+            console.log("Decoded README:", readmeContent);
+          }
+        } catch (error) {
+          console.error("README not found or inaccessible:", error.response?.data || error.message);
+          setSummary("No README found for this user.");
+        }
+
+        // Fetch AI Summary (if README exists)
+        if (readmeContent) {
+          try {
+            const summaryResponse = await axios.post(
+              "https://api.together.ai/v1/chat/completions",
+              {
+                model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+                messages: [
+                  {
+                    role: "user",
+                    content: `Summarize this GitHub README in 5 sentences, highlighting key technologies used: \n\n ${readmeContent}`,
+                  },
+                ],
+                max_tokens: 200,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer 0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81`, // Replace with your actual API key
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            const aiSummary = summaryResponse.data.choices?.[0]?.message?.content;
+            setSummary(aiSummary || "No summary available.");
+          } catch (error) {
+            console.error("Error fetching AI summary:", error.response?.data || error.message);
+            setSummary("Error generating summary.");
+          }
+        }
+
+        // Fetch repositories for Tech Stack
+        const reposResponse = await axios.get(userResponse.data.repos_url);
+        const techLanguages = new Set();
+        reposResponse.data.forEach((repo) => {
+          if (repo.language) techLanguages.add(repo.language);
+        });
+
+        const formattedTechStack = [...techLanguages].map((tech) => ({
+          name: tech,
+          category: "Programming Language",
+          image: `https://skillicons.dev/icons?i=${tech.toLowerCase()}`,
+          description: `I use ${tech} for building applications, solving problems, and enhancing my development workflow.`,
+          categoryColor: "blue",
+        }));
+
+        setTechStack(formattedTechStack);
+      } catch (error) {
+        console.error("Error fetching data:", error.response?.data || error.message);
+      }
+    };
+
+    fetchGitHubData();
+  }, [username]);
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-r from-green-200 to-green-300">
@@ -56,10 +100,7 @@ export default function TechStack() {
         <h1 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
           Tech Stack
         </h1>
-        <p className="text-center text-gray-600 mt-2">
-          Sharing my on-the-go tech stack from working, managing, coding and
-          more
-        </p>
+        <p className="text-center text-gray-600 mt-2">{summary}</p>
 
         <div className="flex justify-center items-center mt-6">
           <div className="border-t border-gray-700 w-1/4"></div>
@@ -67,50 +108,41 @@ export default function TechStack() {
           <div className="border-t border-gray-700 w-1/4"></div>
         </div>
 
-        {/* Toggle Buttons */}
-        <div className="flex justify-center items-center mt-4">
-          <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-600 mr-2">
-            <i className="fas fa-th"></i>
-          </button>
-          <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-white">
-            <i className="fas fa-list"></i>
-          </button>
-        </div>
-
-        <h2 className="text-center text-gray-400 mt-8 tracking-widest">
-          LANGUAGES AND FRAMEWORKS
-        </h2>
-
         {/* Tech Stack List */}
         <div className="mt-8">
-          {techStacks.map((tech, index) => (
-            <div key={index} className="flex items-start mb-6 text-black">
-              <div className=" bg-gray-100 rounded-lg">
-                <img
-                  alt={`${tech.name} logo`}
-                  className="w-45 h-35 rounded-md"
-                  src={tech.image}
-                />
+          {techStack.length > 0 ? (
+            techStack.map((tech, index) => (
+              <div key={index} className="flex items-start mb-6 text-black">
+                <div className="bg-gray-100 rounded-lg">
+                  <Image
+                    alt={`${tech.name} logo`}
+                    className="w-45 h-35 rounded-md"
+                    src={tech.image}
+                    width={50}
+                    height={50}
+                    unoptimized
+                  />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-xl font-semibold">
+                    {tech.name}
+                    <span className={`text-sm text-${tech.categoryColor}-600 bg-${tech.categoryColor}-100 px-2 py-1 rounded-full ml-2`}>
+                      {tech.category}
+                    </span>
+                  </h3>
+                  <p className="text-gray-600 mt-2">{tech.description}</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <h3 className="text-xl font-semibold">
-                  {tech.name}
-                  <span
-                    className={`text-sm text-${tech.categoryColor}-600 bg-${tech.categoryColor}-100 px-2 py-1 rounded-full ml-2`}
-                  >
-                    {tech.category}
-                  </span>
-                </h3>
-                <p className="text-gray-600 mt-2">{tech.description}</p>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-center text-gray-500">No tech stack found.</p>
+          )}
         </div>
-        <div className="flex flex-col items-center mt-12">
-          <button className="bg-purple-600 text-white py-2 px-8 rounded-full text-lg hover:bg-purple-700 transition">
-            NEXT
-          </button>
 
+        <div className="flex flex-col items-center mt-12">
+          {/* <button className="bg-purple-600 text-white py-2 px-8 rounded-full text-lg hover:bg-purple-700 transition">
+            NEXT
+          </button> */}
           <footer className="mt-8 text-gray-400">@CodeRagnarok</footer>
         </div>
       </div>
