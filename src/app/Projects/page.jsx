@@ -46,7 +46,7 @@ const RepoBranch = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-3xl font-bold text-center text-purple-600">GitHub Repositories</h2>
+      <h2 className="text-3xl font-bold text-center text-purple-600 mt-[10vh]">GitHub Repositories</h2>
 
       {loading ? (
         <p className="text-center text-gray-500 mt-4">Loading...</p>
