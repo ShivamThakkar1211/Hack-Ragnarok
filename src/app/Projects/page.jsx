@@ -9,6 +9,7 @@ const RepoBranch = () => {
   const searchParams = useSearchParams();
   const username = searchParams.get("username"); // Get username from URL
   const [repos, setRepos] = useState([]);
+  const [displayCount, setDisplayCount] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -112,7 +113,7 @@ const RepoBranch = () => {
           <p className="text-center text-gray-600 font-semibold">No repositories found.</p>
         ) : (
           <div className="mt-6 space-y-6">
-            {repos.map((repo, index) => (
+            {repos.slice(0, displayCount).map((repo, index) => (
               <div key={repo.name} className="bg-gray-100 p-5 rounded-lg shadow-md relative">
                 <span className="absolute -top-3 -left-3 bg-purple-600 text-white w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">
                   {index + 1}
@@ -130,6 +131,15 @@ const RepoBranch = () => {
                 </a>
               </div>
             ))}
+
+            {displayCount < repos.length && (
+              <button
+                onClick={() => setDisplayCount((prev) => prev + 10)}
+                className="w-full mt-6 bg-purple-700 hover:bg-purple-900 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+              >
+                Load More
+              </button>
+            )}
           </div>
         )}
       </div>
