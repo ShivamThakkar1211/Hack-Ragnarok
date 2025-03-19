@@ -7,100 +7,136 @@ import { useSearchParams } from "next/navigation";
 
 export default function TechStack() {
   const [userData, setUserData] = useState(null);
-  const [summary, setSummary] = useState("Loading summary...");
   const [techStack, setTechStack] = useState([]);
+  const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
+
+  const GITHUB_TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
 
   useEffect(() => {
     if (!username) return;
 
-    console.log(`Fetching GitHub data for username: ${username}`);
-
     const fetchGitHubData = async () => {
       try {
+        if (!GITHUB_TOKEN) {
+          console.error("GitHub token is missing.");
+          setError("Missing GitHub token.");
+          return;
+        }
+
+        const headers = {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+        };
+
         // Fetch GitHub user details
-        const userResponse = await axios.get(`https://api.github.com/users/${username}`);
-        setUserData(userResponse.data);
-
-        // Fetch README Content
-        let readmeContent = null;
-        try {
-          const readmeResponse = await axios.get(
-            `https://api.github.com/repos/${username}/${username}/readme`
-          );
-
-          if (readmeResponse.data.content) {
-            readmeContent = atob(readmeResponse.data.content);
-            console.log("Decoded README:", readmeContent);
-          }
-        } catch (error) {
-          console.error("README not found or inaccessible:", error.response?.data || error.message);
-          setSummary("No README found for this user.");
-        }
-
-        // Fetch AI Summary (if README exists)
-        if (readmeContent) {
-          try {
-            const summaryResponse = await axios.post(
-              "https://api.together.ai/v1/chat/completions",
-              {
-                model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-                messages: [
-                  {
-                    role: "user",
-                    content: `Summarize this GitHub README in 5 sentences, highlighting key technologies used: \n\n ${readmeContent}`,
-                  },
-                ],
-                max_tokens: 200,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer 0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81`, // Replace with your actual API key
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-
-            const aiSummary = summaryResponse.data.choices?.[0]?.message?.content;
-            setSummary(aiSummary || "No summary available.");
-          } catch (error) {
-            console.error("Error fetching AI summary:", error.response?.data || error.message);
-            setSummary("Error generating summary.");
-          }
-        }
-
-        // Fetch repositories for Tech Stack
-        const reposResponse = await axios.get(userResponse.data.repos_url);
-        const techLanguages = new Set();
-        reposResponse.data.forEach((repo) => {
-          if (repo.language) techLanguages.add(repo.language);
+        const userResponse = await axios.get(`https://api.github.com/users/${username}`, {
+          headers,
         });
 
-        const formattedTechStack = [...techLanguages].map((tech) => ({
-          name: tech,
-          category: "Programming Language",
-          image: `https://skillicons.dev/icons?i=${tech.toLowerCase()}`,
-          description: `I use ${tech} for building applications, solving problems, and enhancing my development workflow.`,
-          categoryColor: "blue",
-        }));
+        setUserData(userResponse.data);
 
-        setTechStack(formattedTechStack);
+        // Fetch repositories
+        const reposResponse = await axios.get(userResponse.data.repos_url, { headers });
+
+        if (reposResponse.data && reposResponse.data.length) {
+          const techLanguages = new Set();
+
+          reposResponse.data.forEach((repo) => {
+            if (repo.language) {
+              techLanguages.add(repo.language);
+            }
+          });
+
+          const formattedTechStack = [...techLanguages].map((tech) => ({
+            name: tech,
+            category: "Programming Language",
+            image: `https://skillicons.dev/icons?i=${tech.toLowerCase()}`,
+            description: `I use ${tech} for building applications.`,
+            categoryColor: "blue",
+          }));
+
+          setTechStack(formattedTechStack);
+        }
       } catch (error) {
         console.error("Error fetching data:", error.response?.data || error.message);
+        setError("Failed to fetch GitHub data. Please try again later.");
       }
     };
 
     fetchGitHubData();
-  }, [username]);
+  }, [username, GITHUB_TOKEN]);
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-r from-green-200 to-green-300">
-      <div className="rounded-lg p-8 max-w-2xl w-full mt-[7vh]">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
+      <div className="rounded-lg p-8 max-w-3xl w-full shadow-md bg-white mt-28">
+        
+        {/* GitHub README-Style Summary Section */}
+        {userData && (
+          <div className="mb-8">
+            <div className="flex items-center">
+              <Image
+                src={userData.avatar_url}
+                alt={userData.name}
+                width={100}
+                height={100}
+                className="rounded-full border-4 border-gray-300 shadow-lg"
+              />
+              <div className="ml-6">
+                <h2 className="text-3xl font-bold text-gray-900">{userData.name}</h2>
+                <p className="text-gray-600">{userData.bio || "No bio available"}</p>
+                <div className="mt-2 text-sm text-gray-500">
+                  <span>👥 {userData.followers} followers</span> ·
+                  <span> ⭐ {userData.public_repos} repos</span> ·
+                  <span> 📍 {userData.location || "Location not available"}</span>
+                </div>
+                <div className="flex gap-4 mt-4">
+                  <a
+                    href={userData.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    🔗 GitHub Profile
+                  </a>
+                  {userData.blog && (
+                    <a
+                      href={userData.blog.startsWith("http") ? userData.blog : `https://${userData.blog}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
+                    >
+                      🌐 Website
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* GitHub Stats Badges */}
+            <div className="flex justify-center mt-6">
+              <img
+                src={`https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=radical`}
+                alt="GitHub Stats"
+                className="rounded-lg shadow-md"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tech Stack Section */}
         <h1 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
           Tech Stack
         </h1>
-        <p className="text-center text-gray-600 mt-2">{summary}</p>
 
         <div className="flex justify-center items-center mt-6">
           <div className="border-t border-gray-700 w-1/4"></div>
@@ -108,7 +144,6 @@ export default function TechStack() {
           <div className="border-t border-gray-700 w-1/4"></div>
         </div>
 
-        {/* Tech Stack List */}
         <div className="mt-8">
           {techStack.length > 0 ? (
             techStack.map((tech, index) => (
@@ -140,9 +175,6 @@ export default function TechStack() {
         </div>
 
         <div className="flex flex-col items-center mt-12">
-          {/* <button className="bg-purple-600 text-white py-2 px-8 rounded-full text-lg hover:bg-purple-700 transition">
-            NEXT
-          </button> */}
           <footer className="mt-8 text-gray-400">@CodeRagnarok</footer>
         </div>
       </div>

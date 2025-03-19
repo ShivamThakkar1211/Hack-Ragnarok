@@ -3,11 +3,12 @@ import React from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 const Navbar = () => {
   const searchParams = useSearchParams();
   const username = searchParams.get("username"); // Get username from URL
-
+  const { data: session } = useSession();
   return (
     <>
       <Head>
@@ -38,6 +39,15 @@ const Navbar = () => {
             <Link href={`/Enter-url?username=${username}`} passHref>
               <span className="hover:text-purple-600 cursor-pointer">Username</span>
             </Link>
+            {session ? (
+          <button onClick={() => signOut()} >
+            Logout
+          </button>
+        ) : (
+          <button onClick={() => signIn("google")} >
+            Login with Google
+          </button>
+        )}
           </div>
         </div>
       </nav>

@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { FaGithub, FaMapMarkerAlt, FaUsers, FaTwitter, FaLinkedin } from "react-icons/fa";
-import { Suspense } from "react";
 
 export default function Home() {
   const [userData, setUserData] = useState(null);
@@ -15,6 +14,8 @@ export default function Home() {
   const searchParams = useSearchParams();
   const username = searchParams.get("username");
 
+  const GITHUB_PAT = process.env.NEXT_PUBLIC_GITHUB_PAT;  // Using token from .env
+
   useEffect(() => {
     if (!username) return;
 
@@ -22,10 +23,17 @@ export default function Home() {
 
     const fetchGitHubData = async () => {
       try {
-        const userResponse = await axios.get(`https://api.github.com/users/${username}`);
+        const config = {
+          headers: {
+            Authorization: `Bearer ${GITHUB_PAT}`
+          }
+        };
+
+        // Fetch user details
+        const userResponse = await axios.get(`https://api.github.com/users/${username}`, config);
         setUserData(userResponse.data);
 
-        // Extract social links from bio if available
+        // Extract social links
         const socialData = {
           github: userResponse.data.html_url,
           twitter: userResponse.data.twitter_username
@@ -36,43 +44,49 @@ export default function Home() {
         setSocialLinks(socialData);
 
         // Fetch README content
-        const readmeResponse = await axios.get(
-          `https://api.github.com/repos/${username}/${username}/readme`
-        );
-
-        if (readmeResponse.data.content) {
-          const decodedContent = atob(readmeResponse.data.content);
-
-          const summaryResponse = await axios.post(
-            "https://api.together.ai/v1/chat/completions",
-            {
-              model: "meta-llama/Llama-3.3-70B-Instruct-Turbo", // Updated model
-              messages: [
-                {
-                  role: "user",
-                  content: `Summarize this GitHub README in 5 sentences, highlighting key technologies used: \n\n ${decodedContent}`,
-                },
-              ],
-              max_tokens: 200,
-            },
-            {
-              headers: {
-                Authorization: `Bearer 0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81`, // Replace with actual API key
-                "Content-Type": "application/json",
-              },
-            }
+        try {
+          const readmeResponse = await axios.get(
+            `https://api.github.com/repos/${username}/${username}/readme`,
+            config
           );
 
-          setSummary(summaryResponse.data.choices[0]?.message?.content || "No summary available.");
+          if (readmeResponse.data.content) {
+            const decodedContent = atob(readmeResponse.data.content);
+
+            const summaryResponse = await axios.post(
+              "https://api.together.ai/v1/chat/completions",
+              {
+                model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+                messages: [
+                  {
+                    role: "user",
+                    content: `Summarize this GitHub README in 5 sentences, highlighting key technologies used: \n\n ${decodedContent}`,
+                  },
+                ],
+                max_tokens: 200,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer 0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            setSummary(summaryResponse.data.choices[0]?.message?.content || "No summary available.");
+          }
+        } catch (readmeError) {
+          console.warn("README not found or inaccessible:", readmeError.message);
         }
 
         // Fetch repositories for Tech Stack
-        const reposResponse = await axios.get(userResponse.data.repos_url);
+        const reposResponse = await axios.get(userResponse.data.repos_url, config);
         const topLanguages = new Set();
         reposResponse.data.forEach((repo) => {
           if (repo.language) topLanguages.add(repo.language);
         });
         setTechStack([...topLanguages]);
+
       } catch (error) {
         console.error("Error fetching data:", error.response?.data || error.message);
       }
@@ -165,12 +179,12 @@ export default function Home() {
             </div>
 
             {/* README Summary */}
-            {/* {summary && (
+            {summary && (
               <div className="mt-6 bg-gray-50 p-4 rounded shadow">
                 <h2 className="text-lg font-semibold text-indigo-700">README Summary:</h2>
                 <p className="text-gray-700 mt-2">{summary}</p>
               </div>
-            )} */}
+            )}
           </>
         ) : (
           <p className="text-gray-600 text-lg">Loading user details...</p>

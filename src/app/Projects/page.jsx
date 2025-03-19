@@ -1,75 +1,84 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 
-const TOGETHER_AI_API_KEY = "0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81"; // Replace with your API key
+const TOGETHER_AI_API_KEY = "0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81";
+const GITHUB_TOKEN = "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";  // Replace with your GitHub token
+const PER_PAGE = 10;  // Repos per page
 
 const RepoBranch = () => {
   const searchParams = useSearchParams();
-  const username = searchParams.get("username"); // Get username from URL
+  const username = searchParams.get("username");
   const [repos, setRepos] = useState([]);
-  const [displayCount, setDisplayCount] = useState(10);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const fetchRepos = useCallback(async () => {
     if (!username) {
       setError("Username not provided.");
-      setLoading(false);
       return;
     }
 
-    const fetchRepos = async () => {
-      try {
-        const res = await fetch(`https://api.github.com/users/${username}/repos`);
-        if (!res.ok) throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
+    setLoading(true);
+    try {
+      const res = await fetch(`https://api.github.com/users/${username}/repos?per_page=${PER_PAGE}&page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      });
 
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error("Unexpected API response format");
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
 
-        const repoDetails = await Promise.all(
-          data.map(async (repo) => {
-            let summary = "No summary available";
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error("Unexpected API response format");
 
-            try {
-              // Fetch README file
-              const readmeRes = await fetch(`https://api.github.com/repos/${username}/${repo.name}/readme`);
-              if (readmeRes.ok) {
-                const readmeData = await readmeRes.json();
-                const decodedContent = atob(readmeData.content); // Decode Base64 README
+      const repoDetails = await Promise.all(
+        data.map(async (repo) => {
+          let summary = "No summary available";
 
-                // Send README to Together AI for summarization
-                const aiSummary = await summarizeWithTogetherAI(decodedContent);
-                summary = aiSummary || "Failed to generate summary";
-              }
-            } catch {
-              summary = "Failed to load README";
+          try {
+            const readmeRes = await fetch(`https://api.github.com/repos/${username}/${repo.name}/readme`, {
+              headers: {
+                Authorization: `Bearer ${GITHUB_TOKEN}`,
+              },
+            });
+
+            if (readmeRes.ok) {
+              const readmeData = await readmeRes.json();
+              const decodedContent = atob(readmeData.content);
+              summary = await summarizeWithTogetherAI(decodedContent) || "Failed to generate summary";
             }
+          } catch {
+            summary = "Failed to load README";
+          }
 
-            return {
-              name: repo.name,
-              owner: repo.owner?.login || "Unknown",
-              url: repo.html_url,
-              created_at: new Date(repo.created_at).toDateString(),
-              summary,
-            };
-          })
-        );
+          return {
+            id: repo.id,
+            name: repo.name,
+            owner: repo.owner?.login || "Unknown",
+            url: repo.html_url,
+            created_at: new Date(repo.created_at).toDateString(),
+            summary,
+          };
+        })
+      );
 
-        setRepos(repoDetails);
-      } catch (error) {
-        console.error("Error fetching repositories:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setRepos((prev) => [...prev, ...repoDetails]);
+    } catch (error) {
+      console.error("Error fetching repositories:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [username, page]);
 
-    fetchRepos();
-  }, [username]);
+  useEffect(() => {
+    if (username) fetchRepos();
+  }, [username, page, fetchRepos]);
 
-  // Function to send README content to Together AI and get a summary
   const summarizeWithTogetherAI = async (readmeContent) => {
     try {
       const response = await fetch("https://api.together.xyz/v1/chat/completions", {
@@ -103,7 +112,7 @@ const RepoBranch = () => {
       <div className="mt-24 bg-white shadow-2xl rounded-xl p-6 max-w-4xl w-full">
         <h2 className="text-4xl font-extrabold text-center text-purple-700 mb-6">GitHub Repositories</h2>
 
-        {loading ? (
+        {loading && repos.length === 0 ? (
           <div className="flex justify-center items-center">
             <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
@@ -113,8 +122,8 @@ const RepoBranch = () => {
           <p className="text-center text-gray-600 font-semibold">No repositories found.</p>
         ) : (
           <div className="mt-6 space-y-6">
-            {repos.slice(0, displayCount).map((repo, index) => (
-              <div key={repo.name} className="bg-gray-100 p-5 rounded-lg shadow-md relative">
+            {repos.map((repo, index) => (
+              <div key={repo.id} className="bg-gray-100 p-5 rounded-lg shadow-md relative">
                 <span className="absolute -top-3 -left-3 bg-purple-600 text-white w-8 h-8 flex items-center justify-center rounded-full text-lg font-bold">
                   {index + 1}
                 </span>
@@ -132,9 +141,9 @@ const RepoBranch = () => {
               </div>
             ))}
 
-            {displayCount < repos.length && (
+            {repos.length % PER_PAGE === 0 && (
               <button
-                onClick={() => setDisplayCount((prev) => prev + 10)}
+                onClick={() => setPage((prev) => prev + 1)}
                 className="w-full mt-6 bg-purple-700 hover:bg-purple-900 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
               >
                 Load More

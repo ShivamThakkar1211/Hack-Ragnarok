@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/navbar/Navbar";
 import Footer from "@/components/footer/Footer";
 import { Suspense } from "react";
+import AuthProvider from "./context/AuthProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -24,8 +25,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >  <Suspense fallback={<p>Loading...</p>}>
+        <AuthProvider>
         <Navbar />
         {children}
+        </AuthProvider>
         </Suspense>
       </body>
     </html>
