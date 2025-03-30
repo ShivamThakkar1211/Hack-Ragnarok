@@ -77,8 +77,8 @@ export default function TechStack() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
-      <div className="rounded-lg p-8 max-w-3xl w-full shadow-md bg-white mt-28">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50 mt-[-115vh] ml-[25vh]">
+      <div className="rounded-lg p-24 max-w-6xl w-full   mt-28">
         
         {/* GitHub README-Style Summary Section */}
         {userData && (

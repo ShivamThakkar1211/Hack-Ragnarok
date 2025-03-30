@@ -1,20 +1,33 @@
-import mongooser from "mongoose";
+import mongoose from "mongoose";
 
-const userSchema = new mongooser.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    isAdmin:{
-        type: Boolean,
-        default:false,
-    }
+const pdfSchema = new mongoose.Schema({
+  filename: String,
+  contentType: String,
+  data: Buffer,
+  size: Number,
+  uploadedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-const User = mongooser.models.User || mongooser.model("User", userSchema);
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  pdf: pdfSchema // ✅ Add PDF schema field
+});
+
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;

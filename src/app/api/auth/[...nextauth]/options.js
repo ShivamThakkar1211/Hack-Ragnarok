@@ -20,27 +20,31 @@ export const authOptions = {
           await dbConnect();
 
           let existingUser = await User.findOne({ email });
+
           if (!existingUser) {
             const isAdmin = process.env.ADMIN_EMAILS?.split(",").includes(email);
-            await User.create({ name, email, isAdmin });
-            console.log("User created:", name);
+            const newUser = await User.create({ name, email, isAdmin });
+            console.log("User created:", newUser.name);
           } else {
-            console.log("User already exists:", name);
+            console.log("User already exists:", existingUser.name);
           }
         } catch (error) {
           console.log("Error signing in:", error);
           return false;
         }
       }
-      return true; // ✅ Fix: Allow sign-in to proceed
+      return true;
     },
 
     async session({ session }) {
-      await dbConnect(); // ✅ Fix: Ensure DB connection before querying
+      await dbConnect();
       const user = await User.findOne({ email: session.user.email });
+
       if (user) {
-        session.user.isAdmin = user.isAdmin;
+        session.user.id = user._id.toString();  // ✅ Add MongoDB ID to the session
+        session.user.isAdmin = user.isAdmin;    // Include isAdmin field
       }
+
       return session;
     },
   },
