@@ -96,6 +96,18 @@ const NavbarWithSidebar = ({ children }) => {
                 <span>Projects</span>
               </div>
             </Link>
+            <Link href={`/upload-ppt?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
+              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
+                <FaTrophy className="text-blue-400" />
+                <span>PPT</span>
+              </div>
+            </Link>
+            <Link href={`/topThree?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
+              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
+                <FaTrophy className="text-blue-400" />
+                <span>Top Projects </span>
+              </div>
+            </Link>
 
             <Link href={`/Posts?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
               <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
@@ -103,7 +115,7 @@ const NavbarWithSidebar = ({ children }) => {
                 <span>Posts</span>
               </div>
             </Link>
-            <Link href={`/resume-add?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
+            <Link href={`/Resume-add?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
               <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
                 <FaUser className="text-indigo-400" />
                 <span>Add resume</span>

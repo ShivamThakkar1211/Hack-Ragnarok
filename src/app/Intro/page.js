@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { FaGithub, FaMapMarkerAlt, FaUsers, FaCalendarAlt, FaCode, FaLink } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   const [userData, setUserData] = useState(null);
@@ -76,7 +77,7 @@ export default function Home() {
               },
               {
                 headers: {
-                  Authorization: `Bearer 0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81`,
+                  Authorization: `Bearer f04b2b40610c552d0c201ad73784d82d7bca03d7ec52a47d57715a4a92ef98a8`,
                   "Content-Type": "application/json",
                 },
               }
@@ -105,7 +106,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [githubUsername]);
+  }, [githubUsername,GITHUB_PAT]);
 
   useEffect(() => {
     if (!leetcodeUsername) return;

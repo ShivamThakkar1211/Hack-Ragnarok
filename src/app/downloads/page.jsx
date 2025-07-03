@@ -1,42 +1,109 @@
-export default function DownloadShare() {
-    return (
-      <div className=" bg-gradient-to-r from-blue-100 to-pink-100 font-roboto flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-yellow-500 mt-[11vh]">
-            Download and <span className="text-pink-500">Share</span>
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Share the amazing portfolio by LinkFolio via link or downloading the slides and sharing them as a slideshow.
-          </p>
-          <div className="flex items-center justify-center mt-4">
-            <hr className="w-16 border-t border-gray-300" />
-            <i className="fas fa-ellipsis-h mx-2 text-gray-400"></i>
-            <hr className="w-16 border-t border-gray-300" />
-          </div>
-          <div className="flex justify-center mt-4">
-            <button className="bg-pink-200 text-pink-600 font-semibold py-2 px-4 rounded-full flex items-center">
-              <i className="fab fa-github mr-2"></i>
-              Github
-            </button>
-          </div>
-        </div>
-        <div className="mt-8">
-          <img
-            alt="A close-up of a keyboard with red and orange lights, with a bold red banner in the center that says 'LET'S DRAW ATTENTION!' and '@CODERAGNAROK' at the bottom right"
-            className="rounded-lg shadow-lg"
-            height="200"
-            src="https://storage.googleapis.com/a1aa/image/n5pPH_k2VtGCIQx7zBwBRe8rw4UskOXieY8tkeF7MoE.jpg"
-            width="350"
-          />
-        </div>
-        <div className="flex flex-col items-center mt-12">
-            <button className="bg-purple-600 text-white py-2 px-8 rounded-full text-lg hover:bg-purple-700 transition">
-              Download
-            </button>
+"use client";
+import { useState } from "react";
+import axios from "axios";
 
-            <footer className="mt-8 text-gray-400">@CodeRagnarok</footer>
+const PdfUploader = () => {
+  const [file, setFile] = useState(null);
+  const [message, setMessage] = useState("");
+  const [pdfUrl, setPdfUrl] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      alert("Please select a PDF file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/analyze", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      setMessage(`Upload successful: ${response.data.message}`);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setMessage("Failed to upload PDF.");
+    }
+  };
+
+  // ✅ Fetch PDF from MongoDB
+  const handleFetchPdf = async () => {
+    try {
+      const response = await axios.get("/api/pdf", {
+        responseType: "blob"  // Get binary PDF data
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+      setMessage("PDF fetched successfully!");
+    } catch (error) {
+      console.error("Failed to fetch PDF:", error);
+      setMessage("Failed to fetch PDF.");
+    }
+  };
+
+  // ✅ Download PDF
+  const handleDownload = () => {
+    if (pdfUrl) {
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = "document.pdf";
+      link.click();
+    }
+  };
+
+  return (
+    <div className="p-4 mt-[-100vh]">
+      <h2 className="text-xl font-bold">PDF Uploader</h2>
+      
+      {/* Upload Section */}
+      <input 
+        type="file" 
+        accept=".pdf" 
+        onChange={handleFileChange} 
+        className="border p-2 my-2" 
+      />
+      <button 
+        onClick={handleUpload} 
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mx-2"
+      >
+        Upload
+      </button>
+
+      {/* Fetch and Download Section */}
+      <button 
+        onClick={handleFetchPdf} 
+        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 mx-2"
+      >
+        Fetch PDF
+      </button>
+
+      {pdfUrl && (
+        <>
+          <button 
+            onClick={handleDownload} 
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 mx-2"
+          >
+            Download PDF
+          </button>
+
+          {/* Display PDF */}
+          <div className="mt-4">
+            <iframe src={pdfUrl} className="w-full h-[1000px]" />
           </div>
-      </div>
-    );
-  }
-  
+        </>
+      )}
+
+      {message && <p className="mt-4">{message}</p>}
+    </div>
+  );
+};
+
+export default PdfUploader;

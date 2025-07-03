@@ -31,14 +31,19 @@ export default function TechStack() {
         };
 
         // Fetch GitHub user details
-        const userResponse = await axios.get(`https://api.github.com/users/${username}`, {
-          headers,
-        });
+        const userResponse = await axios.get(
+          `https://api.github.com/users/${username}`,
+          {
+            headers,
+          }
+        );
 
         setUserData(userResponse.data);
 
         // Fetch repositories
-        const reposResponse = await axios.get(userResponse.data.repos_url, { headers });
+        const reposResponse = await axios.get(userResponse.data.repos_url, {
+          headers,
+        });
 
         if (reposResponse.data && reposResponse.data.length) {
           const techLanguages = new Set();
@@ -60,7 +65,10 @@ export default function TechStack() {
           setTechStack(formattedTechStack);
         }
       } catch (error) {
-        console.error("Error fetching data:", error.response?.data || error.message);
+        console.error(
+          "Error fetching data:",
+          error.response?.data || error.message
+        );
         setError("Failed to fetch GitHub data. Please try again later.");
       }
     };
@@ -79,7 +87,6 @@ export default function TechStack() {
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50 mt-[-115vh] ml-[25vh]">
       <div className="rounded-lg p-24 max-w-6xl w-full   mt-28">
-        
         {/* GitHub README-Style Summary Section */}
         {userData && (
           <div className="mb-8">
@@ -87,17 +94,24 @@ export default function TechStack() {
               <Image
                 src={userData.avatar_url}
                 alt={userData.name}
-                width={100}
-                height={100}
+                width={50}
+                height={50}
                 className="rounded-full border-4 border-gray-300 shadow-lg"
               />
               <div className="ml-6">
-                <h2 className="text-3xl font-bold text-gray-900">{userData.name}</h2>
-                <p className="text-gray-600">{userData.bio || "No bio available"}</p>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  {userData.name}
+                </h2>
+                <p className="text-gray-600">
+                  {userData.bio || "No bio available"}
+                </p>
                 <div className="mt-2 text-sm text-gray-500">
                   <span>👥 {userData.followers} followers</span> ·
                   <span> ⭐ {userData.public_repos} repos</span> ·
-                  <span> 📍 {userData.location || "Location not available"}</span>
+                  <span>
+                    {" "}
+                    📍 {userData.location || "Location not available"}
+                  </span>
                 </div>
                 <div className="flex gap-4 mt-4">
                   <a
@@ -110,7 +124,11 @@ export default function TechStack() {
                   </a>
                   {userData.blog && (
                     <a
-                      href={userData.blog.startsWith("http") ? userData.blog : `https://${userData.blog}`}
+                      href={
+                        userData.blog.startsWith("http")
+                          ? userData.blog
+                          : `https://${userData.blog}`
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
@@ -124,10 +142,13 @@ export default function TechStack() {
 
             {/* GitHub Stats Badges */}
             <div className="flex justify-center mt-6">
-              <img
+              <Image
                 src={`https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=radical`}
                 alt="GitHub Stats"
+                width={500}
+                height={200}
                 className="rounded-lg shadow-md"
+                unoptimized // prevents optimization warnings for external dynamic image
               />
             </div>
           </div>
@@ -153,15 +174,17 @@ export default function TechStack() {
                     alt={`${tech.name} logo`}
                     className="w-45 h-35 rounded-md"
                     src={tech.image}
-                    width={50}
-                    height={50}
+                    width={20}
+                    height={20}
                     unoptimized
                   />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-xl font-semibold">
                     {tech.name}
-                    <span className={`text-sm text-${tech.categoryColor}-600 bg-${tech.categoryColor}-100 px-2 py-1 rounded-full ml-2`}>
+                    <span
+                      className={`text-sm text-${tech.categoryColor}-600 bg-${tech.categoryColor}-100 px-2 py-1 rounded-full ml-2`}
+                    >
                       {tech.category}
                     </span>
                   </h3>

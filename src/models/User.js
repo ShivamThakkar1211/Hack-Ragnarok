@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const pdfSchema = new mongoose.Schema({
+const fileSchema = new mongoose.Schema({
   filename: String,
   contentType: String,
   data: Buffer,
@@ -25,7 +25,8 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  pdf: pdfSchema // ✅ Add PDF schema field
+  pdf: fileSchema,  // ✅ Store PDF files
+  ppt: fileSchema   // ✅ Store PPT files
 });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

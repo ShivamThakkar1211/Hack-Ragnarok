@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 
 const TOGETHER_AI_API_KEY = "0e33b829155047d690aa9136a54aacd4805a7bac760f192e3c609aa2d2495c81";
-const GITHUB_TOKEN = "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";  // Replace with your GitHub token
+const GITHUB_TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;  // Replace with your GitHub token
 const PER_PAGE = 10;  // Repos per page
 
 const RepoBranch = () => {
