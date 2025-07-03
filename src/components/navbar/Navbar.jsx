@@ -115,7 +115,7 @@ const NavbarWithSidebar = ({ children }) => {
                 <span>Posts</span>
               </div>
             </Link>
-            <Link href={`/Resume-add?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
+            <Link href={`/resume-add?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
               <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
                 <FaUser className="text-indigo-400" />
                 <span>Add resume</span>
