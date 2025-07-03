@@ -1,26 +1,36 @@
-import { NextResponse } from "next/server";
-import dbConnect from "@/helpers/dbConnect";   // MongoDB connection
-import User from "@/models/User";          // Your User schema
+// /app/api/pdf/route.js (App Router)
 
-export async function GET() {
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import dbConnect from "@/helpers/dbConnect";
+import User from "@/models/User";
+
+export async function GET(req) {
   await dbConnect();
 
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const user = await User.findOne();   // Get the first user with a PDF
+    const user = await User.findOne({ email: session.user.email });
+
     if (!user || !user.pdf) {
       return NextResponse.json({ error: "No PDF found" }, { status: 404 });
     }
 
     const pdf = user.pdf;
 
-    // Set headers for PDF download
     const headers = new Headers();
     headers.append("Content-Type", pdf.contentType);
-    headers.append("Content-Disposition", `inline; filename="${pdf.filename}"`);
+    headers.append("Content-Disposition", `inline; filename=\"${pdf.filename}\"`);
 
     return new NextResponse(pdf.data, {
       status: 200,
-      headers
+      headers,
     });
 
   } catch (error) {
