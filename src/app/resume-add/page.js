@@ -9,20 +9,11 @@ export default function PDFUploader() {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+  const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleUpload = async () => {
-    if (!file) {
-      setMessage("Please select a PDF file");
-      return;
-    }
-
-    if (!session || !session.user?.id) {
-      setMessage("Please sign in to upload files");
-      return;
-    }
+    if (!file) return setMessage("Please select a PDF file");
+    if (!session?.user?.id) return setMessage("Please sign in to upload files");
 
     setIsLoading(true);
     setMessage("");
@@ -32,11 +23,8 @@ export default function PDFUploader() {
 
     try {
       const res = await axios.post("/api/upload-pdf", formData, {
-        headers: { 
-          "Content-Type": "multipart/form-data"
-        }
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
       setMessage(res.data.message || "Upload successful!");
     } catch (error) {
       console.error(error);
@@ -47,57 +35,50 @@ export default function PDFUploader() {
   };
 
   return (
-    <div style={{
-      maxWidth: "600px",
-      margin: "2rem auto",
-      padding: "2rem",
-      border: "1px solid #ddd",
-      borderRadius: "8px",
-      backgroundColor: "#f9f9f9",
-      marginTop: "-90vh"
-    }} >
-      <h1 style={{ marginBottom: "1.5rem", color: "#000" }}>
-        {session?.user ? "Upload Your PDF" : "Please Sign In"}
-      </h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-yellow-400 px-4">
+      <div className="bg-white/95 backdrop-blur-md shadow-xl rounded-2xl p-8 w-full max-w-lg text-gray-800">
+        <h1 className="text-3xl font-bold mb-4 text-center">
+          {session?.user ? "Upload Your PDF" : "Please Sign In"}
+        </h1>
 
-      {session?.user && (
-        <>
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", color: "#000" }}>
-              PDF File:
-            </label>
-            <input 
-              type="file" 
-              accept=".pdf" 
-              onChange={handleFileChange}
-              style={{ display: "block" ,color: "#000"}}
-            />
-          </div>
+        {session?.user && (
+          <>
+            <div className="mb-6">
+              <label className="block mb-2 font-semibold">Select PDF File</label>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+                className="w-full border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
+            <button
+              onClick={handleUpload}
+              disabled={isLoading}
+              className={`w-full py-2 rounded-md text-white font-semibold transition ${
+                isLoading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {isLoading ? "Uploading..." : "Upload PDF"}
+            </button>
+          </>
+        )}
 
-          <button
-            onClick={handleUpload}
-            disabled={isLoading || !session?.user}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#0070f3",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              opacity: isLoading ? 0.7 : 1
-            }}
+        {message && (
+          <p
+            className={`mt-4 text-center font-medium ${
+              message.toLowerCase().includes("fail")
+                ? "text-red-500"
+                : "text-green-600"
+            }`}
           >
-            {isLoading ? "Uploading..." : "Upload PDF"}
-          </button>
-        </>
-      )}
-
-      {message && (
-        <p style={{ marginTop: "1rem", color: message.includes("failed") ? "#e53e3e" : "#38a169", fontWeight: "bold" }}>
-          {message}
-        </p>
-      )}
+            {message}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

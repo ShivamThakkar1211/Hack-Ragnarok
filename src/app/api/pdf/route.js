@@ -7,7 +7,7 @@ import dbConnect from "@/helpers/dbConnect";
 import User from "@/models/User";
 
 export async function GET(req) {
-  await dbConnect();
+  await dbConnect;
 
   const session = await getServerSession(authOptions);
 

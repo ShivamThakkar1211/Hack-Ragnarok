@@ -20,7 +20,6 @@ export default function TechStack() {
     const fetchGitHubData = async () => {
       try {
         if (!GITHUB_TOKEN) {
-          console.error("GitHub token is missing.");
           setError("Missing GitHub token.");
           return;
         }
@@ -30,45 +29,37 @@ export default function TechStack() {
           "Content-Type": "application/json",
         };
 
-        // Fetch GitHub user details
+        // Fetch user data
         const userResponse = await axios.get(
           `https://api.github.com/users/${username}`,
-          {
-            headers,
-          }
+          { headers }
         );
-
         setUserData(userResponse.data);
 
-        // Fetch repositories
+        // Fetch repos
         const reposResponse = await axios.get(userResponse.data.repos_url, {
           headers,
         });
 
-        if (reposResponse.data && reposResponse.data.length) {
-          const techLanguages = new Set();
+        if (reposResponse.data?.length) {
+          const languages = new Set();
 
           reposResponse.data.forEach((repo) => {
-            if (repo.language) {
-              techLanguages.add(repo.language);
-            }
+            if (repo.language) languages.add(repo.language);
           });
 
-          const formattedTechStack = [...techLanguages].map((tech) => ({
+          const formatted = [...languages].map((tech) => ({
             name: tech,
             category: "Programming Language",
             image: `https://skillicons.dev/icons?i=${tech.toLowerCase()}`,
-            description: `I use ${tech} for building applications.`,
-            categoryColor: "blue",
+            description: `I frequently use ${tech} in my projects.`,
+            color: "blue",
           }));
 
-          setTechStack(formattedTechStack);
+          setTechStack(formatted);
         }
       } catch (error) {
-        console.error(
-          "Error fetching data:",
-          error.response?.data || error.message
-        );
+        console.error("Error fetching data:", error);
         setError("Failed to fetch GitHub data. Please try again later.");
       }
     };
@@ -78,128 +69,128 @@ export default function TechStack() {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-red-500">{error}</p>
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <p className="text-red-500 text-lg font-medium">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50 mt-[-115vh] ml-[25vh]">
-      <div className="rounded-lg p-24 max-w-6xl w-full   mt-28">
-        {/* GitHub README-Style Summary Section */}
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4 md:px-10 py-10 transition-all duration-300">
+      <div className="w-full max-w-6xl bg-white/70 backdrop-blur-lg shadow-2xl rounded-2xl p-6 sm:p-10 mt-20 sm:mt-24">
+        {/* --- GITHUB HEADER --- */}
         {userData && (
-          <div className="mb-8">
-            <div className="flex items-center">
-              <Image
-                src={userData.avatar_url}
-                alt={userData.name}
-                width={50}
-                height={50}
-                className="rounded-full border-4 border-gray-300 shadow-lg"
-              />
-              <div className="ml-6">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  {userData.name}
-                </h2>
-                <p className="text-gray-600">
-                  {userData.bio || "No bio available"}
-                </p>
-                <div className="mt-2 text-sm text-gray-500">
-                  <span>👥 {userData.followers} followers</span> ·
-                  <span> ⭐ {userData.public_repos} repos</span> ·
-                  <span>
-                    {" "}
-                    📍 {userData.location || "Location not available"}
-                  </span>
-                </div>
-                <div className="flex gap-4 mt-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-10 mb-10">
+            <Image
+              src={userData.avatar_url}
+              alt={userData.name}
+              width={100}
+              height={100}
+              className="rounded-full border-4 border-indigo-300 shadow-lg"
+            />
+            <div className="text-center sm:text-left">
+              <h2 className="text-3xl font-bold text-gray-900">
+                {userData.name}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {userData.bio || "No bio available"}
+              </p>
+
+              <div className="flex flex-wrap gap-3 mt-3 text-sm text-gray-500 justify-center sm:justify-start">
+                <span>👥 {userData.followers} followers</span>
+                <span>⭐ {userData.public_repos} repos</span>
+                {userData.location && <span>📍 {userData.location}</span>}
+              </div>
+
+              <div className="flex gap-3 mt-5 justify-center sm:justify-start">
+                <a
+                  href={userData.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition"
+                >
+                  🔗 GitHub Profile
+                </a>
+                {userData.blog && (
                   <a
-                    href={userData.html_url}
+                    href={
+                      userData.blog.startsWith("http")
+                        ? userData.blog
+                        : `https://${userData.blog}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
                   >
-                    🔗 GitHub Profile
+                    🌐 Website
                   </a>
-                  {userData.blog && (
-                    <a
-                      href={
-                        userData.blog.startsWith("http")
-                          ? userData.blog
-                          : `https://${userData.blog}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
-                    >
-                      🌐 Website
-                    </a>
-                  )}
-                </div>
+                )}
               </div>
-            </div>
-
-            {/* GitHub Stats Badges */}
-            <div className="flex justify-center mt-6">
-              <Image
-                src={`https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=radical`}
-                alt="GitHub Stats"
-                width={500}
-                height={200}
-                className="rounded-lg shadow-md"
-                unoptimized // prevents optimization warnings for external dynamic image
-              />
             </div>
           </div>
         )}
 
-        {/* Tech Stack Section */}
-        <h1 className="text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+        {/* --- GITHUB STATS --- */}
+        {userData && (
+          <div className="flex justify-center mb-12">
+            <Image
+              src={`https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=radical`}
+              alt="GitHub Stats"
+              width={500}
+              height={200}
+              className="rounded-lg shadow-lg"
+              unoptimized
+            />
+          </div>
+        )}
+
+        {/* --- TECH STACK HEADER --- */}
+        <h1 className="text-4xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-pink-500 to-purple-500 mb-10">
           Tech Stack
         </h1>
 
-        <div className="flex justify-center items-center mt-6">
-          <div className="border-t border-gray-700 w-1/4"></div>
-          <div className="mx-4 text-gray-400">✦</div>
-          <div className="border-t border-gray-700 w-1/4"></div>
-        </div>
-
-        <div className="mt-8">
+        {/* --- TECH STACK GRID --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {techStack.length > 0 ? (
-            techStack.map((tech, index) => (
-              <div key={index} className="flex items-start mb-6 text-black">
-                <div className="bg-gray-100 rounded-lg">
+            techStack.map((tech, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-5 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="flex-shrink-0">
                   <Image
-                    alt={`${tech.name} logo`}
-                    className="w-45 h-35 rounded-md"
                     src={tech.image}
-                    width={20}
-                    height={20}
+                    alt={`${tech.name} logo`}
+                    width={40}
+                    height={40}
                     unoptimized
+                    className="rounded-md"
                   />
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-xl font-semibold">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                     {tech.name}
                     <span
-                      className={`text-sm text-${tech.categoryColor}-600 bg-${tech.categoryColor}-100 px-2 py-1 rounded-full ml-2`}
+                      className={`text-xs bg-${tech.color}-100 text-${tech.color}-600 px-2 py-0.5 rounded-full`}
                     >
                       {tech.category}
                     </span>
                   </h3>
-                  <p className="text-gray-600 mt-2">{tech.description}</p>
+                  <p className="text-gray-500 mt-1 text-sm">{tech.description}</p>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-500">No tech stack found.</p>
+            <p className="col-span-full text-center text-gray-500">
+              No tech stack found.
+            </p>
           )}
         </div>
 
-        <div className="flex flex-col items-center mt-12">
-          <footer className="mt-8 text-gray-400">@CodeRagnarok</footer>
-        </div>
+        {/* --- FOOTER --- */}
+        <footer className="mt-16 text-center text-gray-400 text-sm">
+          © {new Date().getFullYear()} <span className="font-medium">LinkFolio</span> · Crafted by <span className="text-indigo-500">@CodeRagnarok</span>
+        </footer>
       </div>
     </div>
   );

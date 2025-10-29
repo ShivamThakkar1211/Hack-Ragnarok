@@ -4,9 +4,14 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
-import { FaGithub, FaMapMarkerAlt, FaUsers, FaCalendarAlt, FaCode, FaLink } from "react-icons/fa";
+import {
+  FaGithub,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaCode,
+  FaLink,
+} from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
-import { useSession } from "next-auth/react";
 
 export default function Home() {
   const [userData, setUserData] = useState(null);
@@ -15,45 +20,43 @@ export default function Home() {
   const [socialLinks, setSocialLinks] = useState({});
   const [reposCount, setReposCount] = useState(0);
   const [leetcodeData, setLeetcodeData] = useState(null);
-  const [loading, setLoading] = useState({
-    github: false,
-    leetcode: false
-  });
+  const [loading, setLoading] = useState({ github: false, leetcode: false });
   const [leetcodeError, setLeetcodeError] = useState(null);
+
   const searchParams = useSearchParams();
   const githubUsername = searchParams.get("username");
   const leetcodeUsername = searchParams.get("leetcode");
-
   const GITHUB_PAT = process.env.NEXT_PUBLIC_GITHUB_PAT;
 
   useEffect(() => {
     if (!githubUsername) return;
 
     const fetchData = async () => {
-      setLoading(prev => ({...prev, github: true}));
-      
+      setLoading((prev) => ({ ...prev, github: true }));
+
       try {
-        // Fetch GitHub data
         const config = {
-          headers: {
-            Authorization: `Bearer ${GITHUB_PAT}`
-          }
+          headers: { Authorization: `Bearer ${GITHUB_PAT}` },
         };
 
-        const userResponse = await axios.get(`https://api.github.com/users/${githubUsername}`, config);
+        const userResponse = await axios.get(
+          `https://api.github.com/users/${githubUsername}`,
+          config
+        );
         setUserData(userResponse.data);
 
-        // Extract social links
         const socialData = {
           github: userResponse.data.html_url,
           twitter: userResponse.data.twitter_username
             ? `https://twitter.com/${userResponse.data.twitter_username}`
             : null,
-          linkedin: userResponse.data.blog?.includes("linkedin.com") ? userResponse.data.blog : null,
+          linkedin: userResponse.data.blog?.includes("linkedin.com")
+            ? userResponse.data.blog
+            : null,
         };
         setSocialLinks(socialData);
 
-        // Fetch README content
+        // Fetch README summary
         try {
           const readmeResponse = await axios.get(
             `https://api.github.com/repos/${githubUsername}/${githubUsername}/readme`,
@@ -62,7 +65,6 @@ export default function Home() {
 
           if (readmeResponse.data.content) {
             const decodedContent = atob(readmeResponse.data.content);
-
             const summaryResponse = await axios.post(
               "https://api.together.ai/v1/chat/completions",
               {
@@ -82,14 +84,16 @@ export default function Home() {
                 },
               }
             );
-
-            setSummary(summaryResponse.data.choices[0]?.message?.content || "No summary available.");
+            setSummary(
+              summaryResponse.data.choices[0]?.message?.content ||
+                "No summary available."
+            );
           }
         } catch (readmeError) {
           console.warn("README not found or inaccessible:", readmeError.message);
         }
 
-        // Fetch repositories for Tech Stack and count
+        // Fetch Repositories for Tech Stack
         const reposResponse = await axios.get(userResponse.data.repos_url, config);
         const topLanguages = new Set();
         reposResponse.data.forEach((repo) => {
@@ -97,27 +101,28 @@ export default function Home() {
         });
         setTechStack([...topLanguages]);
         setReposCount(reposResponse.data.length);
-
       } catch (error) {
         console.error("Error fetching GitHub data:", error.response?.data || error.message);
       } finally {
-        setLoading(prev => ({...prev, github: false}));
+        setLoading((prev) => ({ ...prev, github: false }));
       }
     };
 
     fetchData();
-  }, [githubUsername,GITHUB_PAT]);
+  }, [githubUsername, GITHUB_PAT]);
 
   useEffect(() => {
     if (!leetcodeUsername) return;
 
     const fetchLeetCodeData = async () => {
       setLeetcodeError(null);
-      setLoading(prev => ({...prev, leetcode: true}));
-      
+      setLoading((prev) => ({ ...prev, leetcode: true }));
+
       try {
-        const response = await axios.get(`https://leetcode-stats-api.herokuapp.com/${leetcodeUsername}`);
-        
+        const response = await axios.get(
+          `https://leetcode-stats-api.herokuapp.com/${leetcodeUsername}`
+        );
+
         if (response.data.status === "success") {
           setLeetcodeData({
             totalSolved: response.data.totalSolved,
@@ -125,7 +130,7 @@ export default function Home() {
             mediumSolved: response.data.mediumSolved,
             hardSolved: response.data.hardSolved,
             acceptanceRate: response.data.acceptanceRate,
-            ranking: response.data.ranking
+            ranking: response.data.ranking,
           });
         } else {
           setLeetcodeError("LeetCode user not found or data unavailable");
@@ -134,7 +139,7 @@ export default function Home() {
         console.error("Error fetching LeetCode data:", error);
         setLeetcodeError("Failed to fetch LeetCode data. Please check the username and try again.");
       } finally {
-        setLoading(prev => ({...prev, leetcode: false}));
+        setLoading((prev) => ({ ...prev, leetcode: false }));
       }
     };
 
@@ -142,21 +147,23 @@ export default function Home() {
   }, [leetcodeUsername]);
 
   return (
-    <div className="bg-gray-100 min-h-screen py-8 mt-[-100vh] ml-[25vh]">
-      <div className="max-w-5xl mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-2 text-black">Personal Information</h1>
-        <p className="text-gray-600 mb-6">
+    <div className="bg-gray-100 min-h-screen flex justify-center items-start px-4 sm:px-6 lg:px-8 py-10 lg:py-20 ">
+      <div className="w-full max-w-5xl bg-transparent mt-6 sm:mt-8 md:mt-10 lg:mt-4 xl:mt-0">
+        <h1 className="text-3xl font-bold mb-2 text-black text-center sm:text-left">
+          Personal Information
+        </h1>
+        <p className="text-gray-600 mb-6 text-center sm:text-left">
           {githubUsername && `GitHub: @${githubUsername}`}
           {leetcodeUsername && ` | LeetCode: @${leetcodeUsername}`}
         </p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Profile Section */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4 text-black">Profile</h2>
             <p className="text-gray-500 mb-4">Your developer profile</p>
-            
-            <div className="flex flex-col items-center">
+
+            <div className="flex flex-col items-center text-center">
               {loading.github ? (
                 <div className="animate-pulse">Loading GitHub profile...</div>
               ) : userData ? (
@@ -168,19 +175,26 @@ export default function Home() {
                     height={96}
                     className="w-24 h-24 rounded-full mb-4"
                   />
-                  <h3 className="text-lg font-semibold text-black">{userData.name || githubUsername}</h3>
+                  <h3 className="text-lg font-semibold text-black">
+                    {userData.name || githubUsername}
+                  </h3>
                   <p className="text-gray-500">@{userData.login}</p>
-                  
-                  <div className="flex space-x-4 mt-4">
+
+                  <div className="flex justify-center space-x-4 mt-4">
                     {socialLinks.github && (
-                      <a href={socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:text-black">
+                      <a
+                        href={socialLinks.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-800 hover:text-black"
+                      >
                         <FaGithub size={24} />
                       </a>
                     )}
                     {leetcodeUsername && (
-                      <a 
-                        href={`https://leetcode.com/${leetcodeUsername}`} 
-                        target="_blank" 
+                      <a
+                        href={`https://leetcode.com/${leetcodeUsername}`}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-800 hover:text-orange-500"
                       >
@@ -188,14 +202,18 @@ export default function Home() {
                       </a>
                     )}
                   </div>
-                  
-                  <div className="flex space-x-8 mt-4">
+
+                  <div className="flex justify-center sm:space-x-8 mt-4 flex-wrap gap-6 sm:gap-8">
                     <div className="text-center">
-                      <p className="text-lg font-semibold text-black">{userData.followers || 0}</p>
+                      <p className="text-lg font-semibold text-black">
+                        {userData.followers || 0}
+                      </p>
                       <p className="text-black">Followers</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-semibold text-black">{userData.following || 0}</p>
+                      <p className="text-lg font-semibold text-black">
+                        {userData.following || 0}
+                      </p>
                       <p className="text-black">Following</p>
                     </div>
                     <div className="text-center">
@@ -213,40 +231,43 @@ export default function Home() {
           {/* Detailed Information Section */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4 text-black">Detailed Information</h2>
-            
-            {/* GitHub Information */}
+
             {userData && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2 flex items-center text-black">
                   <FaGithub className="mr-2 text-black" />
                   GitHub Information
                 </h3>
-                
+
                 {userData.location && (
                   <p className="text-gray-600 flex items-center mb-2">
                     <FaMapMarkerAlt className="mr-2 text-red-500" />
                     {userData.location}
                   </p>
                 )}
-                
+
                 {userData.blog && (
-                  <p className="text-orange-500 mb-2">
+                  <p className="text-orange-500 mb-2 break-words">
                     <FaLink className="inline mr-2" />
                     <a href={userData.blog} target="_blank" rel="noopener noreferrer">
                       {userData.blog}
                     </a>
                   </p>
                 )}
-                
+
                 <p className="text-gray-600 mb-2">
                   {userData.followers} followers · {userData.following} following
                 </p>
-                
+
                 <p className="text-gray-600 flex items-center">
                   <FaCalendarAlt className="mr-2" />
-                  Joined {new Date(userData.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                  Joined{" "}
+                  {new Date(userData.created_at).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                  })}
                 </p>
-                
+
                 {userData.bio && (
                   <div className="mt-4 bg-gray-50 p-4 rounded">
                     <h4 className="font-semibold mb-2">Bio</h4>
@@ -256,7 +277,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Tech Stack */}
             {techStack.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2 flex items-center text-black">
@@ -276,40 +296,43 @@ export default function Home() {
               </div>
             )}
 
-            {/* LeetCode Information */}
             {leetcodeUsername && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-2 flex items-center text-black">
                   <SiLeetcode className="mr-2 text-orange-500" />
                   LeetCode Information
                 </h3>
-                
+
                 {loading.leetcode ? (
                   <div className="animate-pulse">Loading LeetCode data...</div>
                 ) : leetcodeError ? (
-                  <div className="text-red-500 p-3 bg-red-50 rounded">
-                    {leetcodeError}
-                  </div>
+                  <div className="text-red-500 p-3 bg-red-50 rounded">{leetcodeError}</div>
                 ) : leetcodeData ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-100 p-4 rounded-lg">
-                      <p className="text-blue-500 text-2xl font-semibold">{leetcodeData.totalSolved}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-gray-100 p-4 rounded-lg text-center">
+                      <p className="text-blue-500 text-2xl font-semibold">
+                        {leetcodeData.totalSolved}
+                      </p>
                       <p className="text-gray-700">Problems Solved</p>
-                      <p className="text-green-500 text-sm">
-                        Easy: {leetcodeData.easySolved} · Medium: {leetcodeData.mediumSolved} · Hard: {leetcodeData.hardSolved}
+                      <p className="text-green-500 text-sm mt-1">
+                        Easy: {leetcodeData.easySolved} · Medium: {leetcodeData.mediumSolved} · Hard:{" "}
+                        {leetcodeData.hardSolved}
                       </p>
                     </div>
-                    <div className="bg-gray-100 p-4 rounded-lg">
-                      <p className="text-blue-500 text-2xl font-semibold">#{leetcodeData.ranking}</p>
+                    <div className="bg-gray-100 p-4 rounded-lg text-center">
+                      <p className="text-blue-500 text-2xl font-semibold">
+                        #{leetcodeData.ranking}
+                      </p>
                       <p className="text-gray-700">Ranking</p>
-                      <p className="text-gray-700 text-sm">Acceptance Rate: {leetcodeData.acceptanceRate}%</p>
+                      <p className="text-gray-700 text-sm mt-1">
+                        Acceptance Rate: {leetcodeData.acceptanceRate}%
+                      </p>
                     </div>
-                    
-                    <a 
+                    <a
                       href={`https://leetcode.com/${leetcodeUsername}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="col-span-2 text-center text-blue-500 hover:underline"
+                      className="col-span-1 sm:col-span-2 text-center text-blue-500 hover:underline mt-2"
                     >
                       View full LeetCode profile
                     </a>
@@ -322,15 +345,15 @@ export default function Home() {
           </div>
         </div>
 
-        {/* README Summary */}
         {summary && (
           <div className="mt-6 bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4 text-black">User Profile Summary</h2>
+            <h2 className="text-xl font-semibold mb-4 text-black">
+              User Profile Summary
+            </h2>
             <p className="text-gray-700 whitespace-pre-line">{summary}</p>
           </div>
         )}
       </div>
     </div>
-    
   );
 }

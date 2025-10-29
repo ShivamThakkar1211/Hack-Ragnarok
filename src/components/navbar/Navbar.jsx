@@ -5,7 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { FaUser, FaStar, FaTrophy, FaGraduationCap, FaDownload } from "react-icons/fa";
+import {
+  FaUser,
+  FaStar,
+  FaTrophy,
+  FaGraduationCap,
+  FaDownload,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
 import axios from "axios";
 
 const NavbarWithSidebar = ({ children }) => {
@@ -13,8 +21,10 @@ const NavbarWithSidebar = ({ children }) => {
   const username = searchParams.get("username");
   const leetcode = searchParams.get("leetcode");
   const { data: session } = useSession();
+
   const [githubUser, setGithubUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // start hidden always
 
   useEffect(() => {
     if (!username) return;
@@ -34,6 +44,21 @@ const NavbarWithSidebar = ({ children }) => {
     fetchGitHubUser();
   }, [username]);
 
+  const links = [
+    { href: `/Intro`, label: "Intro", icon: <FaUser className="text-purple-400" /> },
+    { href: `/Techstack`, label: "TechStack", icon: <FaStar className="text-yellow-400" /> },
+    { href: `/Projects`, label: "Projects", icon: <FaTrophy className="text-blue-400" /> },
+    { href: `/upload-ppt`, label: "PPT", icon: <FaTrophy className="text-blue-400" /> },
+    { href: `/topThree`, label: "Top Projects", icon: <FaTrophy className="text-blue-400" /> },
+    { href: `/Posts`, label: "Posts", icon: <FaGraduationCap className="text-green-400" /> },
+    { href: `/Resume-add`, label: "Add Resume", icon: <FaUser className="text-indigo-400" /> },
+    { href: `/downloads`, label: "Download", icon: <FaDownload className="text-red-400" /> },
+    { href: `/Enter-url`, label: "Username", icon: <FaUser className="text-indigo-400" /> },
+  ];
+
+  const fullLink = (href) =>
+    `${href}?username=${username}${leetcode ? `&leetcode=${leetcode}` : ""}`;
+
   return (
     <>
       <Head>
@@ -41,9 +66,25 @@ const NavbarWithSidebar = ({ children }) => {
         <meta name="description" content="Machine Learning Engineer Portfolio" />
       </Head>
 
-      {/* Fixed Sidebar on top of everything */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-5 z-50">
-        <div className="flex flex-col items-center h-full">
+      {/* TOP NAVBAR */}
+      <div className="fixed top-0 left-0 right-0 bg-gray-900 text-white flex items-center justify-between px-4 py-3 z-50 shadow-md">
+        <h1 className="text-lg font-bold">LinkFolio</h1>
+
+        {/* Toggle button always visible */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="focus:outline-none"
+        >
+          {sidebarOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
+        </button>
+      </div>
+
+      {/* SIDEBAR */}
+      <div
+        className={`fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-5 z-40 transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <div className="flex flex-col items-center h-full pt-20 overflow-y-auto">
           {loading ? (
             <div className="w-20 h-20 bg-gray-700 rounded-full mb-4 animate-pulse"></div>
           ) : githubUser ? (
@@ -76,68 +117,20 @@ const NavbarWithSidebar = ({ children }) => {
           </button>
 
           <div className="flex-grow space-y-4 w-full">
-            <Link href={`/Intro?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaUser className="text-purple-400" />
-                <span>Intro</span>
-              </div>
-            </Link>
-
-            <Link href={`/Techstack?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaStar className="text-yellow-400" />
-                <span>TechStack</span>
-              </div>
-            </Link>
-
-            <Link href={`/Projects?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaTrophy className="text-blue-400" />
-                <span>Projects</span>
-              </div>
-            </Link>
-            <Link href={`/upload-ppt?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaTrophy className="text-blue-400" />
-                <span>PPT</span>
-              </div>
-            </Link>
-            <Link href={`/topThree?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaTrophy className="text-blue-400" />
-                <span>Top Projects </span>
-              </div>
-            </Link>
-
-            <Link href={`/Posts?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaGraduationCap className="text-green-400" />
-                <span>Posts</span>
-              </div>
-            </Link>
-            <Link href={`/resume-add?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaUser className="text-indigo-400" />
-                <span>Add resume</span>
-              </div>
-            </Link>
-
-            <Link href={`/downloads?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaDownload className="text-red-400" />
-                <span>Download</span>
-              </div>
-            </Link>
-
-            <Link href={`/Enter-url?username=${username}${leetcode ? `&leetcode=${leetcode}` : ''}`} passHref>
-              <div className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer">
-                <FaUser className="text-indigo-400" />
-                <span>Username</span>
-              </div>
-            </Link>
+            {links.map((link, index) => (
+              <Link key={index} href={fullLink(link.href)} passHref>
+                <div
+                  className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-md cursor-pointer"
+                  onClick={() => setSidebarOpen(false)} // auto-hide on click
+                >
+                  {link.icon}
+                  <span>{link.label}</span>
+                </div>
+              </Link>
+            ))}
           </div>
 
-          <div className="mt-auto w-full">
+          <div className="mt-6 w-full">
             {session ? (
               <button
                 onClick={() => signOut()}
@@ -157,11 +150,13 @@ const NavbarWithSidebar = ({ children }) => {
         </div>
       </div>
 
-      {/* Main Content Area with offset for fixed sidebar */}
-      <div className="ml-64">
-        <div className="bg-gray-100 p-6 min-h-screen">
-          {children}
-        </div>
+      {/* MAIN CONTENT AREA */}
+      <div
+        className={`transition-all duration-300 bg-gray-100 min-h-screen p-6 pt-20 mt-[-100vh]  ${
+          sidebarOpen ? "md:ml-64" : "md:ml-0  "
+        }`}
+      >
+        {children}
       </div>
     </>
   );
