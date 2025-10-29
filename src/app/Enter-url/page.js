@@ -15,8 +15,6 @@ export default function GitHubUser() {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // 🟣 sidebar toggle state
-
   const router = useRouter();
 
   const handleSearch = () => {
@@ -69,19 +67,7 @@ export default function GitHubUser() {
   };
 
   return (
-    <div
-      className={`relative min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-900 via-purple-800 to-pink-700 overflow-hidden transition-all duration-500 ${
-        sidebarOpen ? "md:ml-[25vh]" : "md:ml-0"
-      }`}
-    >
-      {/* 🔘 Sidebar Toggle Button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute top-5 left-5 z-20 bg-white/20 backdrop-blur-md text-white px-3 py-2 rounded-md hover:bg-white/30 transition"
-      >
-        {sidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
-      </button>
-
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-900 via-purple-800 to-pink-700 overflow-hidden">
       {/* Animated gradient overlay */}
       <div
         className="absolute inset-0 opacity-50 bg-gradient-to-r from-blue-700 via-purple-600 to-pink-500 animate-[gradient_10s_ease_infinite]"
@@ -92,7 +78,7 @@ export default function GitHubUser() {
       />
 
       {/* Card Container */}
-      <div className="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-8 text-center border border-white/30 transition-all hover:shadow-pink-500/30">
+      <div className="relative z-10 w-full max-w-md bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-8 text-center border border-white/30 transition-all hover:shadow-pink-500/30 mx-4 sm:mx-0">
         <div className="flex justify-center space-x-4 mb-6">
           <FaGithub className="text-gray-800 text-3xl" />
           <FaCode className="text-purple-700 text-3xl" />

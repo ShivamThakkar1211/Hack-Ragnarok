@@ -51,7 +51,7 @@ const NavbarWithSidebar = ({ children }) => {
     { href: `/upload-ppt`, label: "PPT", icon: <FaTrophy className="text-blue-400" /> },
     { href: `/topThree`, label: "Top Projects", icon: <FaTrophy className="text-blue-400" /> },
     { href: `/Posts`, label: "Posts", icon: <FaGraduationCap className="text-green-400" /> },
-    { href: `/Resume-add`, label: "Add Resume", icon: <FaUser className="text-indigo-400" /> },
+    { href: `/resume-add`, label: "Add Resume", icon: <FaUser className="text-indigo-400" /> },
     { href: `/downloads`, label: "Download", icon: <FaDownload className="text-red-400" /> },
     { href: `/Enter-url`, label: "Username", icon: <FaUser className="text-indigo-400" /> },
   ];
