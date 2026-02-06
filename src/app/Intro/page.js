@@ -63,30 +63,35 @@ export default function Home() {
             config
           );
 
-        const summaryResponse = await axios.post(
-  "https://api.openai.com/v1/chat/completions",
-  {
-    model: "gpt-4o-mini", // fast + cheap + great for summaries
-    messages: [
-      {
-        role: "user",
-        content: `Summarize this GitHub README in 5 sentences, highlighting key technologies used:\n\n${decodedContent}`,
-      },
-    ],
-    max_tokens: 200,
-  },
-  {
-    headers: {
-      Authorization: `Bearer 3a842a067e08484a9704d34038cf0d1d`, // never hardcode keys bro
-      "Content-Type": "application/json",
-    },
-  }
-);
-
-setSummary(
-  summaryResponse.data.choices[0]?.message?.content ||
-  "No summary available."
-);
+  if (readmeResponse.data.content) {
+            const decodedContent = atob(readmeResponse.data.content);
+            const summaryResponse = await axios.post(
+              "https://api.together.ai/v1/chat/completions",
+              {
+                model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+                messages: [
+                  {
+                    role: "user",
+                    content: `Summarize this GitHub README in 5 sentences, highlighting key technologies used: \n\n ${decodedContent}`,
+                  },
+                ],
+                max_tokens: 200,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer f04b2b40610c552d0c201ad73784d82d7bca03d7ec52a47d57715a4a92ef98a8`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            setSummary(
+              summaryResponse.data.choices[0]?.message?.content ||
+                "No summary available."
+            );
+          }
+        } catch (readmeError) {
+          console.warn("README not found or inaccessible:", readmeError.message);
+        }
 
 
         // Fetch Repositories for Tech Stack
